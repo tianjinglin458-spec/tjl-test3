@@ -31,6 +31,7 @@ let loaderFrame = 0
 const sceneWidth = 3400
 const skySceneWidth = 7900
 const totalWidth = sceneWidth * 2 + skySceneWidth
+const publicAsset = (fileName) => `${import.meta.env.BASE_URL}${fileName}`
 
 const backgroundPoints = [
   ['建设背景', '智慧校园建设持续推进，学校需要把分散的教务、后勤和通知服务整合到统一平台。'],
@@ -86,10 +87,10 @@ const backendWorks = [
 ]
 
 const securityItems = [
-  ['用户服务模块', '/用户.jpg', '负责用户登录、用户注册、信息管理和密码修改，支持管理员、教师、学生三类角色。'],
-  ['教务服务模块', '/选课.jpg', '包含课程管理、成绩管理、选课管理和退课管理，支撑教学事务线上办理。'],
-  ['后勤服务模块', '/后勤.jpg', '包含故障报修、场馆预约、报修处理和预约审核，方便师生跟踪处理进度。'],
-  ['公告服务模块', '/公告.jpg', '支持公告发布、查询、修改和删除，保证学校通知能够及时传达给目标用户。'],
+  ['用户服务模块', publicAsset('用户.jpg'), '负责用户登录、用户注册、信息管理和密码修改，支持管理员、教师、学生三类角色。'],
+  ['教务服务模块', publicAsset('选课.jpg'), '包含课程管理、成绩管理、选课管理和退课管理，支撑教学事务线上办理。'],
+  ['后勤服务模块', publicAsset('后勤.jpg'), '包含故障报修、场馆预约、报修处理和预约审核，方便师生跟踪处理进度。'],
+  ['公告服务模块', publicAsset('公告.jpg'), '支持公告发布、查询、修改和删除，保证学校通知能够及时传达给目标用户。'],
 ]
 
 const screenshots = [
@@ -450,7 +451,7 @@ onBeforeUnmount(() => {
           </div>
           <div class="screenshot-wall sea-shot reveal delay-4">
             <div class="shot-window large real-shot">
-              <img src="/登录页.jpg" alt="校园微服务化平台登录页" />
+              <img :src="publicAsset('登录页.jpg')" alt="校园微服务化平台登录页" />
             </div>
             <p>登录页展示平台统一入口，用来说明系统如何把校园常用服务集中到一站式访问页面。</p>
           </div>
@@ -538,14 +539,14 @@ onBeforeUnmount(() => {
           <div class="outlook">
             <article :class="{ 'sky-card-in': backendCardActive[0] }">
               <div class="module-shot">
-                <img src="/nocas.jpg" alt="Nacos 服务注册截图" />
+                <img :src="publicAsset('nocas.jpg')" alt="Nacos 服务注册截图" />
               </div>
               <h2>Nacos 服务注册</h2>
               <p>使用 Nacos 作为服务注册中心，所有微服务启动后自动向 Nacos 注册实例，Nacos 控制台可实时查看各服务实例的健康状态与元数据。</p>
             </article>
             <article :class="{ 'sky-card-in': backendCardActive[1] }">
               <div class="module-shot">
-                <img src="/k8s.jpg" alt="Docker 与 K8s 部署截图" />
+                <img :src="publicAsset('k8s.jpg')" alt="Docker 与 K8s 部署截图" />
               </div>
               <h2>Docker + K8s</h2>
               <p>每个微服务打包为独立 Docker 镜像，K8s 通过 Deployment、Service 和 Ingress 完成部署、负载均衡、滚动更新与健康检查。</p>
