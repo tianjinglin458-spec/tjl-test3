@@ -22,6 +22,7 @@ const isLoading = ref(true)
 const loadingProgress = ref(0)
 const loaderJump = ref(false)
 const playerLanding = ref(false)
+const stageScale = ref(0.9)
 let stopTimer = 0
 let ticking = false
 let autoFrame = 0
@@ -31,6 +32,9 @@ let loaderFrame = 0
 const sceneWidth = 3400
 const skySceneWidth = 7900
 const totalWidth = sceneWidth * 2 + skySceneWidth
+const maxStageScale = 0.9
+const minStageScale = 0.78
+const designViewportHeight = 768
 const publicAsset = (fileName) => `${import.meta.env.BASE_URL}${fileName}`
 
 const backgroundPoints = [
@@ -153,6 +157,7 @@ const currentQuest = computed(() => {
 })
 
 const sceneStyles = computed(() => ({
+  '--stage-scale': stageScale.value,
   '--scroll-progress': progress.value,
   '--camera-drift': `${(progress.value - 0.5) * 22}px`,
   '--sea-active': activeScene.value === 'sea' ? 1 : 0,
@@ -166,6 +171,18 @@ const sceneStyles = computed(() => ({
   '--sea-skill-active': seaModuleActive.value[2],
   '--sea-shot-active': seaModuleActive.value[3],
 }))
+const worldFrameStyle = computed(() => ({
+  width: `${totalWidth * stageScale.value}px`,
+}))
+const worldStyle = computed(() => ({
+  width: `${totalWidth}px`,
+  transform: `scale(${stageScale.value})`,
+}))
+
+const updateStageScale = () => {
+  const next = Math.min(maxStageScale, Math.max(minStageScale, (window.innerHeight / designViewportHeight) * maxStageScale))
+  stageScale.value = Number(next.toFixed(3))
+}
 
 const updateFromScroll = () => {
   const el = scroller.value
@@ -173,30 +190,33 @@ const updateFromScroll = () => {
 
   const previous = scrollX.value
   const current = el.scrollLeft
-  scrollX.value = current
+  const scale = stageScale.value || 1
+  const designCurrent = current / scale
+  const designViewportWidth = window.innerWidth / scale
+  scrollX.value = designCurrent
   maxScroll.value = Math.max(el.scrollWidth - el.clientWidth, 1)
   progress.value = current / maxScroll.value
   heroX.value = 90 + progress.value * Math.max(window.innerWidth - 200, 120)
 
-  if (current > previous) facing.value = 'right'
-  if (current < previous) facing.value = 'left'
-  if (Math.abs(current - previous) > 0.5) markWalking()
+  if (designCurrent > previous) facing.value = 'right'
+  if (designCurrent < previous) facing.value = 'left'
+  if (Math.abs(designCurrent - previous) > 0.5) markWalking()
 
-  if (current < sceneWidth * 0.72) activeScene.value = 'sea'
-  else if (current < sceneWidth * 1.78) activeScene.value = 'town'
+  if (designCurrent < sceneWidth * 0.72) activeScene.value = 'sea'
+  else if (designCurrent < sceneWidth * 1.78) activeScene.value = 'town'
   else activeScene.value = 'sky'
 
-  const seaRevealEdge = current + window.innerWidth * 0.75
+  const seaRevealEdge = designCurrent + designViewportWidth * 0.75
   seaModuleActive.value = [
     seaRevealEdge > 80 ? 1 : 0,
     seaRevealEdge > 760 ? 1 : 0,
     seaRevealEdge > 1480 ? 1 : 0,
     seaRevealEdge > 2280 ? 1 : 0,
   ]
-  architectureActive.value = current + window.innerWidth * 0.75 > sceneWidth + 900 ? 1 : 0
-  workBoardActive.value = current + window.innerWidth * 0.75 > sceneWidth + 1540 ? 1 : 0
-  moduleGridActive.value = current + window.innerWidth * 0.75 > sceneWidth + 2220 ? 1 : 0
-  const revealEdge = current + window.innerWidth * 0.75
+  architectureActive.value = designCurrent + designViewportWidth * 0.75 > sceneWidth + 900 ? 1 : 0
+  workBoardActive.value = designCurrent + designViewportWidth * 0.75 > sceneWidth + 1540 ? 1 : 0
+  moduleGridActive.value = designCurrent + designViewportWidth * 0.75 > sceneWidth + 2220 ? 1 : 0
+  const revealEdge = designCurrent + designViewportWidth * 0.75
   const skyStart = sceneWidth * 2
   skyCardActive.value = [0, 1, 2, 3].map((index) => (revealEdge > skyStart + 820 + index * 1050 ? 1 : 0))
   backendCardActive.value = [
@@ -204,7 +224,7 @@ const updateFromScroll = () => {
     revealEdge > skyStart + 6360 ? 1 : 0,
   ]
 
-  document.documentElement.style.setProperty('--scroll-x', current)
+  document.documentElement.style.setProperty('--scroll-x', designCurrent)
 }
 
 const requestUpdate = () => {
@@ -280,6 +300,7 @@ const onKeydown = (event) => {
 }
 
 const resize = () => {
+  updateStageScale()
   updateFromScroll()
 }
 
@@ -317,6 +338,7 @@ const startLoader = () => {
 }
 
 onMounted(() => {
+  updateStageScale()
   updateFromScroll()
   startLoader()
   scroller.value?.addEventListener('scroll', requestUpdate, { passive: true })
@@ -394,8 +416,9 @@ onBeforeUnmount(() => {
     </div>
 
     <div ref="scroller" class="horizontal-scroll" @wheel="onWheel">
-      <div class="world" :style="{ width: `${totalWidth}px` }">
-        <div class="parallax far" :style="{ transform: `translate3d(${-scrollX * 0.2}px,0,0)` }">
+      <div class="world-frame" :style="worldFrameStyle">
+        <div class="world" :style="worldStyle">
+          <div class="parallax far" :style="{ transform: `translate3d(${-scrollX * 0.2}px,0,0)` }">
           <span class="cloud c1"></span>
           <span class="cloud c2"></span>
           <span class="cloud c3"></span>
@@ -554,6 +577,7 @@ onBeforeUnmount(() => {
           </div>
 
         </section>
+      </div>
       </div>
     </div>
 
